@@ -96,18 +96,9 @@ function addFlowers(x,z){
   const colors=[0xff5f86,0xffd65c,0x7bd7ff,0xb87cff];
   for(let i=0;i<4;i++){const a=i*1.57;const px=x+Math.cos(a)*.7,pz=z+Math.sin(a)*.7;box("flowerStem",px,.22,pz,.07,.45,.07,mats.leaf,false);box("flower",px,.48,pz,.18,.18,.18,mat(colors[i],.7),false)}
 }
-function addMountain(x,z,h=12){
-  const levels=Math.floor(h/1.8);
-  for(let y=0;y<levels;y++){
-    const radius=Math.max(1,Math.floor((levels-y)*.65));
-    for(let ix=-radius;ix<=radius;ix++) for(let iz=-radius;iz<=radius;iz++){
-      if(Math.abs(ix)+Math.abs(iz)>radius+1) continue;
-      box("mountain",x+ix*1.8,y*1.8+.9,z+iz*1.8,1.9,1.8,1.9,y<levels-3?mats.stoneDark:mats.stone,false);
-    }
-  }
-}
-function addCloud(x,y,z,s=1){const m=mat(0xf3f7ff,.98);[[0,0,0,4],[3,0,0,3],[-3,0,0,3],[1.5,.9,0,3],[-1.5,.9,0,2.6]].forEach(q=>box("cloud",x+q[0]*s,y+q[1]*s,z+q[2]*s,q[3]*s,.8*s,2.2*s,m,false));}
-function addFlowers(x,z){const colors=[0xff5f86,0xffd65c,0x7bd7ff,0xb87cff];for(let i=0;i<4;i++){const a=i*1.57,px=x+Math.cos(a)*.7,pz=z+Math.sin(a)*.7;box("flowerStem",px,.22,pz,.07,.45,.07,mats.leaf,false);box("flower",px,.48,pz,.18,.18,.18,mat(colors[i],.7),false);}}
+
+
+
 function createWorld(){
   const ground=box("ground",0,-.5,0,world.size*2,1,world.size*2,mats.grass,false);
   // paths
@@ -120,13 +111,9 @@ function createWorld(){
   // village
   addHouse(-7,-9);addHouse(8,-8);addHouse(0,9);
   [[-11,-5],[12,-5],[-4,5],[4,5]].forEach(p=>{box("lampPole",p[0],1,p[1],.12,2,.12,mats.woodDark,false);box("lamp",p[0],2.15,p[1],.38,.38,.38,mats.gold,false);});
-  [[-11,-5],[12,-5],[-4,5],[4,5]].forEach(p=>{box("lampPole",p[0],1,p[1],.12,2,.12,mats.woodDark,false);box("lamp",p[0],2.15,p[1],.38,.38,.38,mats.gold,false);});
   for(let i=0;i<28;i++){const x=-70+((i*37)%140),z=-75+((i*53)%150);if(Math.abs(x)<13||Math.abs(z)<13||Math.hypot(x+33,z+30)<18)continue;addTree(x,z,.75+(i%4)*.12)}
   for(let i=0;i<70;i++){const x=-78+((i*47)%156),z=-78+((i*71)%156);if(Math.abs(x)<15||Math.abs(z)<15)continue;box("grassPatch",x,.04,z,.55,.08,.55,i%2?mats.grass2:mats.grass,false)}
   for(let i=0;i<22;i++){const x=-75+((i*61)%150),z=-72+((i*29)%145);addRock(x,z,.6+(i%3)*.25)}
-  addMountain(-62,-62,14);addMountain(66,-64,12);addMountain(-68,62,11);addMountain(68,68,15);
-  addCloud(-35,24,-10,1.4);addCloud(25,30,18,1.1);addCloud(65,27,-35,.9);
-  [[-15,-18],[15,-20],[-20,12],[18,10],[5,28],[-48,8],[44,-20]].forEach(p=>addFlowers(p[0],p[1]));
   addMountain(-62,-62,14);addMountain(66,-64,12);addMountain(-68,62,11);addMountain(68,68,15);
   addCloud(-35,24,-10,1.4);addCloud(25,30,18,1.1);addCloud(65,27,-35,.9);
   [[-15,-18],[15,-20],[-20,12],[18,10],[5,28],[-48,8],[44,-20]].forEach(p=>addFlowers(p[0],p[1]));
@@ -281,3 +268,10 @@ function animate(){
  renderer.render(scene,camera);requestAnimationFrame(animate)
 }
 animate();
+
+const startButtons=[document.getElementById("play"),document.getElementById("continue")];
+
+
+startButtons[0].onclick=newGame;
+startButtons[1].onclick=continueGame;
+startButtons.forEach(b=>b.addEventListener("pointerdown",e=>{e.preventDefault();(b===startButtons[0]?newGame:continueGame)()},{passive:false}));
