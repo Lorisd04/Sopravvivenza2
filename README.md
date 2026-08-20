@@ -1,8 +1,20 @@
-# Loris & Marisa — Lunaria 3D V2
+# Loris & Marisa — Lunaria Master Visual
 
-Avventura 3D in prima persona con stile voxel originale ispirato ai giochi a cubetti: blocchi netti, colori saturi, case dettagliate, alberi voxel, terreno verde, acqua blu, rocce e ombre.
+Versione ricostruita in prima persona 3D con stile voxel/low-poly originale:
+- villaggio con case dettagliate
+- foresta
+- montagne a blocchi
+- lago
+- rovine e tempio
+- nuvole e giorno/notte
+- Loris + Marisa
+- NPC
+- 3 Cristalli Lunari
+- nemici
+- boss
+- combattimento
+- salvataggio locale
+- controlli PC + touch iPhone
 
 Non usa asset proprietari di Minecraft.
-
-PC: WASD + mouse, Spazio, J, E, Shift.
-iPhone: joystick, trascinamento visuale, attacco, salto, interazione.
+Three.js viene caricata da CDN, quindi il gioco richiede Internet.

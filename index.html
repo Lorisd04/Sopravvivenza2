@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#091126">
-<title>Loris & Marisa — Lunaria 3D Definitive</title>
+<meta name="theme-color" content="#0a1022">
+<title>Loris & Marisa — Lunaria</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -12,63 +12,66 @@
 <canvas id="game"></canvas>
 
 <section id="menu" class="screen">
-  <div class="glow"></div>
-  <div class="eyebrow">LORIS × MARISA • DEFINITIVE EDITION</div>
-  <h1>LUNARIA <span>3D</span></h1>
-  <p>Una nuova avventura in prima persona. Esplora il Bosco di Aurora, trova i Cristalli Lunari e affronta il Guardiano.</p>
-  <div class="cards">
-    <div><b>👁️</b><span>Prima persona</span></div>
+  <div class="menu-glow"></div>
+  <div class="brand">LORIS <span>×</span> MARISA</div>
+  <h1>LUNARIA</h1>
+  <p class="tagline">Il Cuore della Luna è stato spezzato. Il viaggio comincia qui.</p>
+  <div class="feature-row">
     <div><b>🌲</b><span>Mondo 3D</span></div>
-    <div><b>⚔️</b><span>Combattimento</span></div>
+    <div><b>⚔️</b><span>Avventura</span></div>
+    <div><b>🌙</b><span>Boss e missioni</span></div>
   </div>
-  <button type="button" id="play" class="main">INIZIA AVVENTURA</button>
-  <button type="button" id="continue" class="ghost">CONTINUA</button>
-  <div class="controlsText">PC: WASD + mouse • SPAZIO salta • J attacca • E interagisci<br>iPhone: joystick + trascinamento schermo + pulsanti</div>
+  <button id="newGame" class="primary">INIZIA AVVENTURA</button>
+  <button id="continueGame" class="secondary">CONTINUA</button>
+  <div class="controls">PC: WASD + mouse · SPAZIO salto · J attacco · E interagisci · SHIFT corsa<br>iPhone: joystick + trascinamento visuale + pulsanti</div>
 </section>
 
-<div id="hud" class="hidden">
-  <div class="hudBox">
-    <div class="title">LORIS</div>
-    <div class="hearts" id="hp">❤❤❤❤❤</div>
+<section id="hud" class="hidden">
+  <div class="hud-left card">
+    <div class="hud-name">LORIS</div>
+    <div class="hearts" id="hearts">♥♥♥♥♥</div>
     <div class="bar"><i id="hpBar"></i></div>
   </div>
-  <div class="quest"><small>OBIETTIVO</small><b id="quest">Raggiungi il Bosco</b></div>
-  <div class="rightHud">
-    <div class="hudBox compact">💎 <b id="crystals">0</b> / 3</div>
-    <div class="hudBox compact">🪙 <b id="coins">0</b></div>
-    <button id="pause">Ⅱ</button>
+  <div class="objective card">
+    <small>OBIETTIVO</small>
+    <b id="objective">Raggiungi il villaggio</b>
   </div>
-</div>
-
-<div id="crosshair" class="hidden">+</div>
-<div id="hint"></div>
-<div id="toast"></div>
-
-<div id="touch" class="hidden">
-  <div id="joystick"><div></div></div>
-  <div class="touchButtons">
-    <button data-action="attack">⚔</button>
-    <button data-action="jump">↑</button>
-    <button data-action="interact">E</button>
-  </div>
-</div>
-
-<section id="pauseBox" class="screen modal hidden">
-  <div class="panel">
-    <div class="eyebrow">LUNARIA 3D</div>
-    <h2>PAUSA</h2>
-    <button id="resume" class="main">RIPRENDI</button>
-    <button id="save" class="ghost">SALVA</button>
-    <button id="menuBtn" class="ghost">MENU</button>
+  <div class="hud-right">
+    <div class="stat card">💎 <b id="crystals">0</b>/3</div>
+    <div class="stat card">🪙 <b id="coins">0</b></div>
+    <button id="pauseBtn" class="pause">Ⅱ</button>
   </div>
 </section>
 
-<section id="winBox" class="screen modal hidden">
-  <div class="panel">
-    <div class="eyebrow">LUNARIA È SALVA</div>
+<div id="crosshair" class="hidden">•</div>
+<div id="hint" class="floating"></div>
+<div id="toast" class="toast"></div>
+
+<section id="touch" class="hidden">
+  <div id="joystick"><div></div></div>
+  <div class="touch-actions">
+    <button data-touch="attack">⚔</button>
+    <button data-touch="jump">↑</button>
+    <button data-touch="interact">E</button>
+  </div>
+</section>
+
+<section id="pause" class="screen modal hidden">
+  <div class="modal-card">
+    <div class="brand">LORIS <span>×</span> MARISA</div>
+    <h2>PAUSA</h2>
+    <button id="resumeBtn" class="primary">RIPRENDI</button>
+    <button id="saveBtn" class="secondary">SALVA</button>
+    <button id="menuBtn" class="secondary">MENU</button>
+  </div>
+</section>
+
+<section id="ending" class="screen modal hidden">
+  <div class="modal-card">
+    <div class="brand">LUNARIA È SALVA</div>
     <h2>Loris ❤️ Marisa</h2>
-    <p>Hai recuperato i tre Cristalli Lunari e sconfitto il Guardiano.</p>
-    <button id="again" class="main">RICOMINCIA</button>
+    <p>Il Cuore della Luna è tornato a brillare.</p>
+    <button id="endingBtn" class="primary">RIGIOCA</button>
   </div>
 </section>
 
