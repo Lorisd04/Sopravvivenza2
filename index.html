@@ -1,87 +1,57 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#0a1022">
-<title>Loris & Marisa — Lunaria</title>
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D World Explorer</title>
+    <!-- Favicon inline per prevenire errori 404 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Libreria Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-<canvas id="game"></canvas>
+    <!-- Canvas del gioco -->
+    <div id="game-container"></div>
 
-<section id="menu" class="screen">
-  <div class="menu-glow"></div>
-  <div class="brand">LORIS <span>×</span> MARISA</div>
-  <h1>LUNARIA</h1>
-  <p class="tagline">Il Cuore della Luna è stato spezzato. Il viaggio comincia qui.</p>
-  <div class="feature-row">
-    <div><b>🌲</b><span>Mondo 3D</span></div>
-    <div><b>⚔️</b><span>Avventura</span></div>
-    <div><b>🌙</b><span>Boss e missioni</span></div>
-  </div>
-  <button id="newGame" class="primary">INIZIA AVVENTURA</button>
-  <button id="continueGame" class="secondary">CONTINUA</button>
-  <div class="controls">PC: WASD + mouse · SPAZIO salto · J attacco · E interagisci · SHIFT corsa<br>iPhone: joystick + trascinamento visuale + pulsanti</div>
-</section>
+    <!-- UI Overlay / HUD -->
+    <div id="ui-layer">
+        <div id="hud">
+            <div class="hud-card">
+                <span class="hud-label">Monete:</span>
+                <span id="score" class="hud-value">0 / 10</span>
+            </div>
+            <div class="hud-card">
+                <span class="hud-label">Posizione:</span>
+                <span id="pos-display" class="hud-value">X: 0, Z: 0</span>
+            </div>
+        </div>
 
-<section id="hud" class="hidden">
-  <div class="hud-left card">
-    <div class="hud-name">LORIS</div>
-    <div class="hearts" id="hearts">♥♥♥♥♥</div>
-    <div class="bar"><i id="hpBar"></i></div>
-  </div>
-  <div class="objective card">
-    <small>OBIETTIVO</small>
-    <b id="objective">Raggiungi il villaggio</b>
-  </div>
-  <div class="hud-right">
-    <div class="stat card">💎 <b id="crystals">0</b>/3</div>
-    <div class="stat card">🪙 <b id="coins">0</b></div>
-    <button id="pauseBtn" class="pause">Ⅱ</button>
-  </div>
-</section>
+        <div id="controls-hint">
+            <p><strong>Controlli:</strong></p>
+            <p>⌨️ <b>WASD / Frecce</b>: Muovi Personaggio</p>
+            <p>SPACE <b>Spazio</b>: Salta</p>
+            <p>🖱️ <b>Trascina Mouse</b>: Ruota Telecamera</p>
+            <p>🔘 <b>Rotella</b>: Zoom Telecamera</p>
+        </div>
 
-<div id="crosshair" class="hidden">•</div>
-<div id="hint" class="floating"></div>
-<div id="toast" class="toast"></div>
+        <div id="interaction-prompt" class="hidden">
+            Premi <kbd>E</kbd> per parlare
+        </div>
 
-<section id="touch" class="hidden">
-  <div id="joystick"><div class="joystick-knob"></div></div>
-  <div class="touch-actions">
-    <button data-touch="attack">⚔</button>
-    <button data-touch="jump">↑</button>
-    <button data-touch="interact">E</button>
-  </div>
-</section>
+        <div id="dialog-box" class="hidden">
+            <div id="dialog-speaker">NPC</div>
+            <div id="dialog-text">Ciao avventuriero!</div>
+            <button id="dialog-close" onclick="closeDialog()">Chiudi</button>
+        </div>
 
-<section id="pause" class="screen modal hidden">
-  <div class="modal-card">
-    <div class="brand">LORIS <span>×</span> MARISA</div>
-    <h2>PAUSA</h2>
-    <button id="resumeBtn" class="primary">RIPRENDI</button>
-    <button id="saveBtn" class="secondary">SALVA</button>
-    <button id="menuBtn" class="secondary">MENU</button>
-  </div>
-</section>
+        <div id="day-night-btn" onclick="toggleDayNight()">
+            🌙 Passa a Notte
+        </div>
+    </div>
 
-<section id="ending" class="screen modal hidden">
-  <div class="modal-card">
-    <div class="brand">LUNARIA È SALVA</div>
-    <h2>Loris ❤️ Marisa</h2>
-    <p>Il Cuore della Luna è tornato a brillare.</p>
-    <button id="endingBtn" class="primary">RIGIOCA</button>
-  </div>
-</section>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
-  }
-}
-</script>
-<script type="module" src="game.js"></script>
+    <!-- Script del gioco -->
+    <script src="game.js"></script>
 </body>
 </html>
