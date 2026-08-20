@@ -145,7 +145,7 @@ function win(){running=false;document.getElementById("winBox").classList.remove(
 function start(){document.getElementById("menu").classList.add("hidden");document.getElementById("hud").classList.remove("hidden");document.getElementById("crosshair").classList.remove("hidden");document.getElementById("touch").classList.remove("hidden");running=true;paused=false;updateHUD();renderer.domElement.requestPointerLock?.()}
 function pause(){paused=true;document.getElementById("pauseBox").classList.remove("hidden")}
 function resume(){paused=false;document.getElementById("pauseBox").classList.add("hidden")}
-document.getElementById("play").onclick=()=>{localStorage.removeItem("lunaria3d");location.reload()}
+document.getElementById("play").onclick=()=>{localStorage.removeItem("lunaria3d");sessionStorage.setItem("lunariaAutoStart","1");location.reload()}
 document.getElementById("continue").onclick=()=>{if(load())start();else{toast("Nessun salvataggio: inizio una nuova avventura");start()}}
 document.getElementById("pause").onclick=pause;document.getElementById("resume").onclick=resume;document.getElementById("save").onclick=save;document.getElementById("menuBtn").onclick=()=>location.reload();document.getElementById("again").onclick=()=>location.reload();
 
@@ -161,7 +161,7 @@ function joy(e){const r=joystick.getBoundingClientRect(),p=e.touches?Array.from(
 joystick.addEventListener("touchstart",e=>{e.preventDefault();joyActive=true;joyId=e.changedTouches[0].identifier;joy(e)},{passive:false});joystick.addEventListener("touchmove",e=>{e.preventDefault();if(joyActive)joy(e)},{passive:false});["touchend","touchcancel"].forEach(ev=>joystick.addEventListener(ev,()=>{joyActive=false;keys.a=keys.d=keys.w=keys.s=false;joystick.querySelector("div").style.transform=""}));
 document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("touchstart",e=>{e.preventDefault();const a=b.dataset.action;if(a==="attack")attack();if(a==="jump")jump();if(a==="interact")interact()},{passive:false}));
 
-createWorld();spawnEnemies();updateHUD();
+createWorld();spawnEnemies();updateHUD();if(sessionStorage.getItem("lunariaAutoStart")==="1"){sessionStorage.removeItem("lunariaAutoStart");start()}
 
 function animate(){
  const dt=Math.min(.04,clock.getDelta());gameTime+=dt;
