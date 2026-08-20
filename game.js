@@ -233,8 +233,27 @@ function win(){running=false;document.getElementById("winBox").classList.remove(
 function start(){document.getElementById("menu").classList.add("hidden");document.getElementById("hud").classList.remove("hidden");document.getElementById("crosshair").classList.remove("hidden");document.getElementById("touch").classList.remove("hidden");running=true;paused=false;updateHUD();renderer.domElement.requestPointerLock?.()}
 function pause(){paused=true;document.getElementById("pauseBox").classList.remove("hidden")}
 function resume(){paused=false;document.getElementById("pauseBox").classList.add("hidden")}
-document.getElementById("play").onclick=()=>{localStorage.removeItem("lunaria3d");sessionStorage.setItem("lunariaAutoStart","1");location.reload()}
-document.getElementById("continue").onclick=()=>{if(load())start();else{toast("Nessun salvataggio: inizio una nuova avventura");start()}}
+function newGame(){
+  localStorage.removeItem("lunaria3d");
+  camera.position.set(0,2.2,8);
+  yaw=0; pitch=0; velY=0; grounded=false;
+  crystals=0; coins=0; quest=0; hp=100; boss=null;
+  crystalObjects.forEach(c=>{c.userData.taken=false;c.visible=true;});
+  enemies.forEach(e=>{e.dead=false;e.hp=e.max;e.mesh.visible=true;});
+  portal.visible=false;
+  updateHUD();
+  start();
+}
+function continueGame(){
+  if(!load()){ toast("Nessun salvataggio: inizio una nuova avventura"); }
+  start();
+}
+const playBtn=document.getElementById("play");
+const continueBtn=document.getElementById("continue");
+playBtn.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();newGame();});
+continueBtn.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();continueGame();});
+playBtn.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();});
+continueBtn.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();});
 document.getElementById("pause").onclick=pause;document.getElementById("resume").onclick=resume;document.getElementById("save").onclick=save;document.getElementById("menuBtn").onclick=()=>location.reload();document.getElementById("again").onclick=()=>location.reload();
 
 document.addEventListener("click",e=>{if(!running||paused)return;if(innerWidth>800&&document.pointerLockElement!==canvas)canvas.requestPointerLock?.()});
