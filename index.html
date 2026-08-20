@@ -2,56 +2,265 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D World Explorer</title>
-    <!-- Favicon inline per prevenire errori 404 -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
-    <link rel="stylesheet" href="styles.css">
-    
-    <!-- Libreria Three.js -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Loris & Marisa - Wilderness Experience</title>
+    <style>
+        * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; touch-action: none; }
+        #canvas-container { width: 100%; height: 100%; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: rgba(255,255,255,0.85); border: 1px solid rgba(0,0,0,0.4); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 5; }
+        
+        /* UI Controls */
+        #hud { position: absolute; top: 12px; left: 0; width: 100%; text-align: center; color: rgba(255,255,255,0.9); text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 13px; font-weight: 500; pointer-events: none; z-index: 10; }
+        #ui-panel { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); padding: 8px 12px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 10; }
+        
+        .item-btn { padding: 10px 16px; font-size: 13px; font-weight: 600; color: #cbd5e1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; cursor: pointer; transition: all 0.2s ease; }
+        .item-btn.active { background: #22c55e; color: #fff; border-color: #4ade80; box-shadow: 0 0 12px rgba(34,197,94,0.4); }
+        #build-btn { padding: 10px 20px; font-size: 13px; font-weight: 700; color: #fff; background: #3b82f6; border: 1px solid #60a5fa; border-radius: 20px; box-shadow: 0 0 12px rgba(59,130,246,0.4); }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-    <!-- Canvas del gioco -->
-    <div id="game-container"></div>
-
-    <!-- UI Overlay / HUD -->
-    <div id="ui-layer">
-        <div id="hud">
-            <div class="hud-card">
-                <span class="hud-label">Monete:</span>
-                <span id="score" class="hud-value">0 / 10</span>
-            </div>
-            <div class="hud-card">
-                <span class="hud-label">Posizione:</span>
-                <span id="pos-display" class="hud-value">X: 0, Z: 0</span>
-            </div>
-        </div>
-
-        <div id="controls-hint">
-            <p><strong>Controlli:</strong></p>
-            <p>⌨️ <b>WASD / Frecce</b>: Muovi Personaggio</p>
-            <p>SPACE <b>Spazio</b>: Salta</p>
-            <p>🖱️ <b>Trascina Mouse</b>: Ruota Telecamera</p>
-            <p>🔘 <b>Rotella</b>: Zoom Telecamera</p>
-        </div>
-
-        <div id="interaction-prompt" class="hidden">
-            Premi <kbd>E</kbd> per parlare
-        </div>
-
-        <div id="dialog-box" class="hidden">
-            <div id="dialog-speaker">NPC</div>
-            <div id="dialog-text">Ciao avventuriero!</div>
-            <button id="dialog-close" onclick="closeDialog()">Chiudi</button>
-        </div>
-
-        <div id="day-night-btn" onclick="toggleDayNight()">
-            🌙 Passa a Notte
-        </div>
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+    <div id="hud">Sinistra: Muoviti | Destra: Sguardo</div>
+    
+    <div id="ui-panel">
+        <button class="item-btn active" data-type="tent">⛺ Tenda</button>
+        <button class="item-btn" data-type="fire">🔥 Fuoco</button>
+        <button class="item-btn" data-type="fence">🪵 Recinto</button>
+        <button id="build-btn">Piazza</button>
     </div>
 
-    <!-- Script del gioco -->
-    <script src="game.js"></script>
+    <script>
+        // Setup Scena
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xb5d6fd);
+        scene.fog = new THREE.FogExp2(0xb5d6fd, 0.008);
+
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 500);
+        camera.position.set(0, 2.5, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.1;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Luci Naturali
+        const sun = new THREE.DirectionalLight(0xfff5ea, 2.2);
+        sun.position.set(60, 80, 40);
+        sun.castShadow = true;
+        sun.shadow.mapSize.width = 2048;
+        sun.shadow.mapSize.height = 2048;
+        sun.shadow.camera.near = 0.5;
+        sun.shadow.camera.far = 200;
+        sun.shadow.camera.left = -60;
+        sun.shadow.camera.right = 60;
+        sun.shadow.camera.top = 60;
+        sun.shadow.camera.bottom = -60;
+        scene.add(sun);
+
+        const ambientLight = new THREE.AmbientLight(0x6080a0, 1.0);
+        scene.add(ambientLight);
+
+        // Terreno Collinare Procedurale
+        const terrainGeo = new THREE.PlaneGeometry(350, 350, 80, 80);
+        terrainGeo.rotateX(-Math.PI / 2);
+        const pos = terrainGeo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i);
+            const z = pos.getZ(i);
+            const y = Math.sin(x * 0.03) * Math.cos(z * 0.03) * 2.5 + Math.sin(x * 0.01) * 3;
+            pos.setY(i, y);
+        }
+        terrainGeo.computeVertexNormals();
+
+        const terrainMat = new THREE.MeshStandardMaterial({ color: 0x3a5a28, roughness: 0.95, metalness: 0.05 });
+        const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+        terrain.receiveShadow = true;
+        scene.add(terrain);
+
+        // Generazione Natura (Alberi e Rocce)
+        const campfires = [];
+        function addTree(x, z) {
+            const group = new THREE.Group();
+            const trunkGeo = new THREE.CylinderGeometry(0.25, 0.45, 4, 7);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2c1d11, roughness: 0.9 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 2;
+            trunk.castShadow = true;
+            group.add(trunk);
+
+            const foliageGeo = new THREE.ConeGeometry(2.5, 6, 6);
+            const foliageMat = new THREE.MeshStandardMaterial({ color: 0x1e4219, roughness: 0.6 });
+            const foliage = new THREE.Mesh(foliageGeo, foliageMat);
+            foliage.position.y = 5;
+            foliage.castShadow = true;
+            group.add(foliage);
+
+            group.position.set(x, getTerrainHeight(x, z), z);
+            scene.add(group);
+        }
+
+        function getTerrainHeight(x, z) {
+            return Math.sin(x * 0.03) * Math.cos(z * 0.03) * 2.5 + Math.sin(x * 0.01) * 3;
+        }
+
+        for (let i = 0; i < 90; i++) {
+            const rx = (Math.random() - 0.5) * 260;
+            const rz = (Math.random() - 0.5) * 260;
+            if (Math.hypot(rx, rz) > 10) addTree(rx, rz);
+        }
+
+        // Sistema Costruzione Campo Base
+        let selectedType = 'tent';
+        document.querySelectorAll('.item-btn').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.item-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedType = btn.dataset.type;
+            });
+        });
+
+        function buildItem() {
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir);
+            const targetPos = camera.position.clone().add(dir.multiplyScalar(4));
+            const y = getTerrainHeight(targetPos.x, targetPos.z);
+            targetPos.y = y;
+
+            if (selectedType === 'tent') {
+                const tentGroup = new THREE.Group();
+                const geo = new THREE.ConeGeometry(2, 2.8, 4);
+                const mat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.8 });
+                const tent = new THREE.Mesh(geo, mat);
+                tent.position.y = 1.4;
+                tent.rotation.y = camera.rotation.y;
+                tent.castShadow = true;
+                tentGroup.add(tent);
+                tentGroup.position.copy(targetPos);
+                scene.add(tentGroup);
+            } else if (selectedType === 'fire') {
+                const fireGroup = new THREE.Group();
+                // Pietre
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    const stone = new THREE.Mesh(
+                        new THREE.DodecahedronGeometry(0.25),
+                        new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.9 })
+                    );
+                    stone.position.set(Math.cos(angle) * 0.6, 0.1, Math.sin(angle) * 0.6);
+                    stone.castShadow = true;
+                    fireGroup.add(stone);
+                }
+                // Luce del fuoco
+                const light = new THREE.PointLight(0xff6600, 2.5, 12);
+                light.position.y = 0.5;
+                light.castShadow = true;
+                fireGroup.add(light);
+                campfires.push(light);
+
+                fireGroup.position.copy(targetPos);
+                scene.add(fireGroup);
+            } else if (selectedType === 'fence') {
+                const fence = new THREE.Mesh(
+                    new THREE.BoxGeometry(3, 1.2, 0.2),
+                    new THREE.MeshStandardMaterial({ color: 0x4a2e12, roughness: 0.8 })
+                );
+                fence.position.copy(targetPos);
+                fence.position.y += 0.6;
+                fence.rotation.y = camera.rotation.y;
+                fence.castShadow = true;
+                scene.add(fence);
+            }
+        }
+
+        document.getElementById('build-btn').addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            buildItem();
+        });
+
+        // Controlli Touch iOS
+        let moveTouchId = null, lookTouchId = null;
+        let lastLookX = 0, lastLookY = 0;
+        let isMoving = false;
+
+        window.addEventListener('touchstart', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.clientX < window.innerWidth / 2 && moveTouchId === null) {
+                    moveTouchId = touch.identifier;
+                    isMoving = true;
+                } else if (touch.clientX >= window.innerWidth / 2 && lookTouchId === null) {
+                    lookTouchId = touch.identifier;
+                    lastLookX = touch.clientX;
+                    lastLookY = touch.clientY;
+                }
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === lookTouchId) {
+                    const dx = touch.clientX - lastLookX;
+                    const dy = touch.clientY - lastLookY;
+                    camera.rotation.y -= dx * 0.004;
+                    camera.rotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, camera.rotation.x - dy * 0.004));
+                    camera.rotation.z = 0;
+                    lastLookX = touch.clientX;
+                    lastLookY = touch.clientY;
+                }
+            }
+        }, { passive: false });
+
+        const endTouch = (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === moveTouchId) { moveTouchId = null; isMoving = false; }
+                if (touch.identifier === lookTouchId) { lookTouchId = null; }
+            }
+        };
+        window.addEventListener('touchend', endTouch);
+        window.addEventListener('touchcancel', endTouch);
+
+        // Loop di Rendering e Animazione
+        let clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            // Movimento Giocatore
+            if (isMoving) {
+                const dir = new THREE.Vector3();
+                camera.getWorldDirection(dir);
+                dir.y = 0;
+                dir.normalize();
+                camera.position.addScaledVector(dir, 7 * delta);
+                camera.position.y = getTerrainHeight(camera.position.x, camera.position.z) + 1.8;
+            }
+
+            // Animazione tremolio luce dei fuochi
+            campfires.forEach((light, idx) => {
+                light.intensity = 2.0 + Math.sin(time * 12 + idx) * 0.6 + Math.random() * 0.2;
+            });
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Responsive Resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>
