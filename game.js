@@ -3,12 +3,14 @@ import * as THREE from "three";
 const canvas=document.getElementById("game");
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 renderer.outputEncoding=THREE.sRGBEncoding;
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=0.78;
+renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<900?1.5:1.75));
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 
 const scene=new THREE.Scene();
-scene.fog=new THREE.Fog(0x8fc7df,35,190);
+scene.fog=new THREE.Fog(0x9bbfc5,45,190);
 scene.background=new THREE.Color(0x8fc7df);
 const skyCanvas=document.createElement("canvas"); skyCanvas.width=32; skyCanvas.height=256;
 const skyCtx=skyCanvas.getContext("2d");
@@ -37,62 +39,97 @@ const playerRadius=.48;
 
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener("resize",resize);resize();
 
-function tex(base, accent, seed=1, scale=1){
-  const c=document.createElement("canvas"); c.width=128; c.height=128;
-  const g=c.getContext("2d");
-  g.fillStyle=base; g.fillRect(0,0,128,128);
-  let s=seed*99991;
-  const rnd=()=>{s=(s*1664525+1013904223)>>>0; return s/4294967296};
-  for(let i=0;i<240;i++){
-    const x=Math.floor(rnd()*128),y=Math.floor(rnd()*128),w=1+Math.floor(rnd()*5),h=1+Math.floor(rnd()*5);
-    g.fillStyle=accent; g.globalAlpha=.16+.28*rnd(); g.fillRect(x,y,w,h);
-  }
-  g.globalAlpha=1;
-  const t=new THREE.CanvasTexture(c);
-  t.wrapS=t.wrapT=THREE.RepeatWrapping;
-  t.repeat.set(scale,scale);
-  t.magFilter=THREE.NearestFilter;
-  t.minFilter=THREE.NearestMipmapLinearFilter;
-  return t;
-}
-function mat(color,rough=.9,texture=null){
-  return new THREE.MeshStandardMaterial({color,roughness:rough,map:texture});
-}
+function mat(color,rough=.9){return new THREE.MeshStandardMaterial({color,roughness:rough,flatShading:true})}
 const mats={
-  grass:mat(0xffffff,.96,tex("#4f9656","#9bd467",1,18)),
-  grass2:mat(0xffffff,.96,tex("#66a965","#d2ef8e",2,14)),
-  trunk:mat(0xffffff,1,tex("#6a4631","#a06a45",3,5)),
-  rock:mat(0xffffff,1,tex("#747b88","#b4bcc8",4,3)),
-  stone:mat(0xffffff,.98,tex("#555f70","#8590a0",5,4)),
-  wood:mat(0xffffff,.95,tex("#76513a","#b27b55",6,4)),
-  roof:mat(0xffffff,.92,tex("#713f52","#b86a79",7,3)),
-  water:mat(0x4dbeef,.22,tex("#1f789b","#75d8f1",8,7)),
-  leaf:mat(0xffffff,.96,tex("#2f7149","#6bbf62",9,5)),
-  leaf2:mat(0xffffff,.96,tex("#438b55","#91d97c",10,5)),
-  crystal:mat(0x9cefff,.22,tex("#79e6ff","#e7ffff",11,2)),
-  enemy:mat(0x8b6fff,.7,tex("#7968cf","#b7a9ff",12,2)),
-  enemy2:mat(0x6de09e,.7,tex("#4aae70","#a1f1af",13,2)),
-  gold:mat(0xffd873,.5,tex("#e8ae43","#ffe38e",14,2)),
-  moon:mat(0xfff2b3,.35,tex("#f1d686","#fff8ce",15,2)),
-  portal:mat(0xc07dff,.3,tex("#8b5fd8","#e2c9ff",16,2))
+ grass:mat(0x4f8f3b,.98),grass2:mat(0x6fb84f,.98),dirt:mat(0x795334,1),
+ trunk:mat(0x69452e,1),trunkDark:mat(0x4a3022,1),rock:mat(0x777b82,1),
+ stone:mat(0x626872,1),stoneDark:mat(0x454a52,1),wood:mat(0x9a633d,.98),
+ woodDark:mat(0x6b412b,1),roof:mat(0x8d3d43,.98),roofDark:mat(0x612a31,1),
+ window:mat(0x58b9e8,.35),water:mat(0x238fba,.22),leaf:mat(0x3e8d3f,.98),
+ leaf2:mat(0x62aa45,.98),crystal:mat(0x6ce7ff,.18),enemy:mat(0x7b64cf,.72),
+ enemy2:mat(0x4eb875,.72),gold:mat(0xf0b83d,.5),moon:mat(0xffe39a,.3),
+ portal:mat(0x9b5de5,.28),sand:mat(0xc7a56a,1)
 };
-function box(name,x,y,z,w,h,d,m,collide=true){const g=new THREE.BoxGeometry(w,h,d),o=new THREE.Mesh(g,m);o.name=name;o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);if(collide)colliders.push({x,z,w,d});return o}
-function addTree(x,z,s=1){box("trunk",x,1.9*s,z,.42*s,3.8*s,.42*s,mats.trunk,false);const a=new THREE.Group();for(let i=0;i<4;i++){const g=new THREE.IcosahedronGeometry(1.65*s,0),o=new THREE.Mesh(g,i%2?mats.leaf:mats.leaf2);o.position.set(x+(i%2?0.8:-.7)*s,4.2*s+(.3*i),z+(i%3-.9)*.6*s);o.scale.set(1.3,.9,1.3);o.castShadow=true;a.add(o)}scene.add(a)}
-function addHouse(x,z){box("house",x,2.1,z,7,4.2,6,mats.wood,true);const r=new THREE.Mesh(new THREE.ConeGeometry(5.2,2.7,4),mats.roof);r.position.set(x,5.2,z);r.rotation.y=Math.PI/4;r.castShadow=true;scene.add(r);box("door",x,1,z-3.05,1.2,2,.2,mats.stone,false)}
-function addRock(x,z,s=1){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(1.2*s,0),mats.rock);r.position.set(x,.9*s,z);r.scale.y=.75;r.castShadow=true;r.receiveShadow=true;scene.add(r)}
+function box(name,x,y,z,w,h,d,m,collide=true){
+ const g=new THREE.BoxGeometry(w,h,d),o=new THREE.Mesh(g,m);
+ o.name=name;o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);
+ if(collide)colliders.push({x,z,w,d});return o;
+}
+function addTree(x,z,s=1){
+ box("trunk",x,1.8*s,z,.55*s,3.6*s,.55*s,mats.trunk,false);
+ box("trunkTop",x,3.55*s,z,.75*s,.45*s,.75*s,mats.trunkDark,false);
+ [[0,4.1,0,2.2,1.1,2.2],[0,5,0,1.8,1,1.8],[-.75,4.55,0,.9,.9,.9],[.75,4.55,0,.9,.9,.9],[0,4.55,-.75,.9,.9,.9],[0,4.55,.75,.9,.9,.9]].forEach((p,i)=>box("leaf",x+p[0]*s,p[1]*s,z+p[2]*s,p[3]*s,p[4]*s,p[5]*s,i%2?mats.leaf2:mats.leaf,false));
+}
+function addHouse(x,z){
+ box("house",x,2.1,z,7,4.2,6,mats.wood,true);
+ box("beam",x-3.35,2.1,z,.22,4.2,6.1,mats.woodDark,false);
+ box("beam",x+3.35,2.1,z,.22,4.2,6.1,mats.woodDark,false);
+ box("beam",x,3.95,z,7.05,.22,6.1,mats.woodDark,false);
+ box("roof1",x,4.55,z,7.8,.7,6.7,mats.roof,true);
+ box("roof2",x,5.15,z,6.3,.65,5.4,mats.roofDark,false);
+ box("roof3",x,5.72,z,4.7,.6,4,mats.roof,false);
+ box("door",x,1,z-3.08,1.25,2,.18,mats.woodDark,false);
+ box("window",x-2,2,z-3.12,1.15,1,.08,mats.window,false);
+ box("window",x+2,2,z-3.12,1.15,1,.08,mats.window,false);
+ box("chimney",x+2,5.2,z+1.2,.8,2.1,.8,mats.stoneDark,false);
+}
+function addRock(x,z,s=1){
+ box("rock",x,.55*s,z,1.5*s,1.1*s,1.2*s,mats.rock,false);
+ box("rockTop",x-.18*s,1.15*s,z-.08*s,.9*s,.35*s,.8*s,mats.stone,false);
+}
+function addMountain(x,z,h=12){
+  const levels=Math.floor(h/1.8);
+  for(let y=0;y<levels;y++){
+    const radius=Math.max(1,Math.floor((levels-y)*.65));
+    for(let ix=-radius;ix<=radius;ix++) for(let iz=-radius;iz<=radius;iz++){
+      if(Math.abs(ix)+Math.abs(iz)>radius+1) continue;
+      const top=y*1.8+.9;
+      box("mountain",x+ix*1.8,top,z+iz*1.8,1.9,1.8,1.9,y<levels-3?mats.stoneDark:mats.stone,false);
+    }
+  }
+}
+function addCloud(x,y,z,s=1){
+  const m=mat(0xf3f7ff,.98);
+  [[0,0,0,4],[3,0,0,3],[-3,0,0,3],[1.5,.9,0,3],[-1.5,.9,0,2.6]].forEach(p=>box("cloud",x+p[0]*s,y+p[1]*s,z+p[2]*s,p[3]*s,.8*s,2.2*s,m,false));
+}
+function addFlowers(x,z){
+  const colors=[0xff5f86,0xffd65c,0x7bd7ff,0xb87cff];
+  for(let i=0;i<4;i++){const a=i*1.57;const px=x+Math.cos(a)*.7,pz=z+Math.sin(a)*.7;box("flowerStem",px,.22,pz,.07,.45,.07,mats.leaf,false);box("flower",px,.48,pz,.18,.18,.18,mat(colors[i],.7),false)}
+}
+function addMountain(x,z,h=12){
+  const levels=Math.floor(h/1.8);
+  for(let y=0;y<levels;y++){
+    const radius=Math.max(1,Math.floor((levels-y)*.65));
+    for(let ix=-radius;ix<=radius;ix++) for(let iz=-radius;iz<=radius;iz++){
+      if(Math.abs(ix)+Math.abs(iz)>radius+1) continue;
+      box("mountain",x+ix*1.8,y*1.8+.9,z+iz*1.8,1.9,1.8,1.9,y<levels-3?mats.stoneDark:mats.stone,false);
+    }
+  }
+}
+function addCloud(x,y,z,s=1){const m=mat(0xf3f7ff,.98);[[0,0,0,4],[3,0,0,3],[-3,0,0,3],[1.5,.9,0,3],[-1.5,.9,0,2.6]].forEach(q=>box("cloud",x+q[0]*s,y+q[1]*s,z+q[2]*s,q[3]*s,.8*s,2.2*s,m,false));}
+function addFlowers(x,z){const colors=[0xff5f86,0xffd65c,0x7bd7ff,0xb87cff];for(let i=0;i<4;i++){const a=i*1.57,px=x+Math.cos(a)*.7,pz=z+Math.sin(a)*.7;box("flowerStem",px,.22,pz,.07,.45,.07,mats.leaf,false);box("flower",px,.48,pz,.18,.18,.18,mat(colors[i],.7),false);}}
 function createWorld(){
   const ground=box("ground",0,-.5,0,world.size*2,1,world.size*2,mats.grass,false);
   // paths
-  box("path",0,.01,0,12,.05,world.size*2,mat(0xffffff,.98,tex("#8b715d","#b99a7b",18,16)),false);
-  box("path2",0,.015,0,world.size*2,.05,11,mat(0xffffff,.98,tex("#8b715d","#b99a7b",18,16)),false);
+  box("path",0,.01,0,12,.08,world.size*2,mats.sand,false);
+  box("path2",0,.015,0,world.size*2,.08,11,mats.sand,false);
   // water lake
-  const water=box("lake",-33,.03,-30,31,.06,25,mats.water,false);water.material.transparent=true;water.material.opacity=.92; water.material.side=THREE.DoubleSide;
+  const water=box("lake",-33,.03,-30,31,.06,25,mats.water,false);water.material.transparent=true;water.material.opacity=.9;water.material.side=THREE.DoubleSide;
   // walls around distant play boundary
   const b=world.size-4;[[-b,0,2,world.size*2],[b,0,2,world.size*2],[0,-b,world.size*2,2],[0,b,world.size*2,2]].forEach(v=>box("boundary",v[0],1,v[1],v[2],4,v[3],mats.stone,true));
   // village
   addHouse(-7,-9);addHouse(8,-8);addHouse(0,9);
+  [[-11,-5],[12,-5],[-4,5],[4,5]].forEach(p=>{box("lampPole",p[0],1,p[1],.12,2,.12,mats.woodDark,false);box("lamp",p[0],2.15,p[1],.38,.38,.38,mats.gold,false);});
+  [[-11,-5],[12,-5],[-4,5],[4,5]].forEach(p=>{box("lampPole",p[0],1,p[1],.12,2,.12,mats.woodDark,false);box("lamp",p[0],2.15,p[1],.38,.38,.38,mats.gold,false);});
   for(let i=0;i<28;i++){const x=-70+((i*37)%140),z=-75+((i*53)%150);if(Math.abs(x)<13||Math.abs(z)<13||Math.hypot(x+33,z+30)<18)continue;addTree(x,z,.75+(i%4)*.12)}
+  for(let i=0;i<70;i++){const x=-78+((i*47)%156),z=-78+((i*71)%156);if(Math.abs(x)<15||Math.abs(z)<15)continue;box("grassPatch",x,.04,z,.55,.08,.55,i%2?mats.grass2:mats.grass,false)}
   for(let i=0;i<22;i++){const x=-75+((i*61)%150),z=-72+((i*29)%145);addRock(x,z,.6+(i%3)*.25)}
+  addMountain(-62,-62,14);addMountain(66,-64,12);addMountain(-68,62,11);addMountain(68,68,15);
+  addCloud(-35,24,-10,1.4);addCloud(25,30,18,1.1);addCloud(65,27,-35,.9);
+  [[-15,-18],[15,-20],[-20,12],[18,10],[5,28],[-48,8],[44,-20]].forEach(p=>addFlowers(p[0],p[1]));
+  addMountain(-62,-62,14);addMountain(66,-64,12);addMountain(-68,62,11);addMountain(68,68,15);
+  addCloud(-35,24,-10,1.4);addCloud(25,30,18,1.1);addCloud(65,27,-35,.9);
+  [[-15,-18],[15,-20],[-20,12],[18,10],[5,28],[-48,8],[44,-20]].forEach(p=>addFlowers(p[0],p[1]));
   // ruins
   for(let i=0;i<7;i++){const x=40+i*5,z=44+(i%3)*3;box("ruin",x,2.5,z,2,5,2,mats.stone,true)}
   // temple gate
@@ -101,13 +138,13 @@ function createWorld(){
   [[22,-27],[47,18],[72,39]].forEach((p,i)=>addCrystal(p[0],p[1],i));
   addNPC(-2,0,"ADA","La Luna Nera ha spezzato il Cuore di Lunaria. Tre cristalli apriranno il Tempio.");
   addNPC(12,14,"ELIO","Quando avrete i tre Cristalli Lunari, il cancello delle rovine si aprirà.");
-  marisa.mesh=createCharacter(0xff78a7,true);scene.add(marisa.mesh);marisa.mesh.position.set(marisa.x,1.1,marisa.z);
+  marisa.mesh=createCharacter(0xff78a7,true);scene.add(marisa.mesh);marisa.mesh.position.set(marisa.x,0,marisa.z);
   addLight();
 }
 function addLight(){
-  const hemi=new THREE.HemisphereLight(0xc9e7ff,0x32402f,1.6);scene.add(hemi);
-  const sun=new THREE.DirectionalLight(0xfff0c7,2.1);sun.position.set(-30,50,25);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-90;sun.shadow.camera.right=90;sun.shadow.camera.top=90;sun.shadow.camera.bottom=-90;scene.add(sun);
-  const moon=new THREE.DirectionalLight(0x8a9dff,0.35);moon.position.set(40,25,-40);scene.add(moon);
+  const hemi=new THREE.HemisphereLight(0xb9d8f4,0x263b24,0.9);scene.add(hemi);
+  const sun=new THREE.DirectionalLight(0xffe5b6,1.35);sun.position.set(-30,50,25);sun.castShadow=true;sun.shadow.mapSize.set(innerWidth<900?1024:1536,innerWidth<900?1024:1536);sun.shadow.camera.left=-90;sun.shadow.camera.right=90;sun.shadow.camera.top=90;sun.shadow.camera.bottom=-90;scene.add(sun);
+  const moon=new THREE.DirectionalLight(0x718bd0,0.12);moon.position.set(40,25,-40);scene.add(moon);
 }
 function createCharacter(color,pink=false){
   const g=new THREE.Group();
@@ -155,7 +192,12 @@ function enemyUpdate(dt){
   for(const e of enemies){if(e.dead)continue;e.cool-=dt;const d=Math.hypot(e.x-camera.position.x,e.z-camera.position.z);if(d<22){const dx=(camera.position.x-e.x)/Math.max(d,.01),dz=(camera.position.z-e.z)/Math.max(d,.01);e.x+=dx*dt*2.1;e.z+=dz*dt*2.1;e.mesh.position.set(e.x,.75,e.z);if(d<2.1&&e.cool<=0){hp=Math.max(0,hp-10);e.cool=1.0;toast("💥 Hai subito un colpo!")}}}
 }
 function bossUpdate(dt){
-  if(!boss||boss.dead)return;const d=Math.hypot(boss.x-camera.position.x,boss.z-camera.position.z);if(d>4.5){boss.x+=(camera.position.x-boss.x)*dt*.75;boss.z+=(camera.position.z-boss.z)*dt*.75;boss.mesh.position.set(boss.x,2,boss.z)}boss.cool-=dt;if(d<3.8&&boss.cool<=0){hp=Math.max(0,hp-18);boss.cool=1.0;toast("🌙 Il Guardiano ti colpisce!")}
+  if(!boss||boss.dead)return;
+  const d=Math.hypot(boss.x-camera.position.x,boss.z-camera.position.z);
+  if(d>4.5){boss.x+=(camera.position.x-boss.x)*dt*.75;boss.z+=(camera.position.z-boss.z)*dt*.75;boss.mesh.position.set(boss.x,2,boss.z);}
+  boss.cool-=dt;
+  if(d<3.8&&boss.cool<=0){hp=Math.max(0,hp-18);boss.cool=1;toast("🌙 Il Guardiano ti colpisce!");}
+  if(hp<=0){hp=100;camera.position.set(0,2.1,8);toast("❤️ Sei caduto! Torni al villaggio.");}
 }
 function questUpdate(){
   if(quest===0&&Math.hypot(camera.position.x,camera.position.z)>18){quest=1;toast("🌲 Trovate i tre Cristalli Lunari")}
