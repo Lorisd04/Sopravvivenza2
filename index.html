@@ -3,99 +3,69 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#0b1024">
+<meta name="theme-color" content="#1a2447">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Lunaria">
-<title>Loris & Marisa — Il Cuore di Lunaria</title>
+<title>Loris & Marisa — Lunaria Pixel</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <canvas id="game"></canvas>
 
-<section id="titleScreen" class="screen">
-  <div class="stars"></div>
-  <div class="brand">LORIS <i>×</i> MARISA</div>
-  <h1>IL CUORE DI <span>LUNARIA</span></h1>
-  <p class="subtitle">Una grande avventura per due. Esplora, combatti, scegli e salva Lunaria.</p>
-  <div class="titleCards">
-    <div><b>⚔️</b><span>Combattimenti</span></div>
-    <div><b>🌙</b><span>Mappa enorme</span></div>
-    <div><b>❤️</b><span>Storia di coppia</span></div>
+<div id="menu" class="overlay">
+  <div class="logoPixel">L♡M</div>
+  <div class="kicker">LORIS & MARISA</div>
+  <h1>LUNARIA</h1>
+  <p>Un'avventura pixel-art in 2D. Esplorate il mondo, combattete insieme e ritrovate il Cuore della Luna.</p>
+  <div class="menuGrid">
+    <div><b>🌲</b><span>Biomi</span></div>
+    <div><b>⚔️</b><span>Combattimento</span></div>
+    <div><b>💎</b><span>Raccolta</span></div>
+    <div><b>🌙</b><span>Boss</span></div>
   </div>
-  <button id="newGame" class="mainBtn">NUOVA AVVENTURA</button>
-  <button id="continueGame" class="ghostBtn">CONTINUA</button>
-  <div class="tiny">Prototipo premium-ready • Web / iPhone • salvataggio locale</div>
-</section>
+  <button id="play" class="pixelBtn">GIOCA</button>
+  <div class="help">PC: Loris A/D + W • Marisa ←/→ + ↑ • Attacco J/K<br>iPhone: controlli touch</div>
+</div>
 
-<section id="hud" class="hidden">
-  <div class="topLeft">
-    <div class="nameplate blue">LORIS <span id="hp1">100</span></div>
-    <div class="bar"><i id="hpBar1"></i></div>
-    <div class="bar stamina"><i id="staminaBar"></i></div>
+<div id="hud" class="hidden">
+  <div class="panel playerPanel">
+    <div class="name">LORIS</div><div class="hearts" id="hpL">♥♥♥♥♥</div><div class="meter"><i id="hpBarL"></i></div>
   </div>
-  <div class="questBox">
-    <div class="questTitle">OBIETTIVO</div>
-    <div id="questText">Esplora il Villaggio di Aurora</div>
+  <div class="objective"><small>OBIETTIVO</small><b id="quest">Raggiungete il Bosco</b></div>
+  <div class="panel playerPanel">
+    <div class="name pink">MARISA</div><div class="hearts pinkText" id="hpM">♥♥♥♥♥</div><div class="meter"><i id="hpBarM"></i></div>
   </div>
-  <div class="topRight">
-    <div class="nameplate pink">MARISA <span id="hp2">100</span></div>
-    <div class="coins">✦ <b id="coins">0</b></div>
-    <button id="pauseBtn">Ⅱ</button>
-  </div>
-</section>
+  <div class="tools"><span>💎 <b id="gems">0</b></span><span>🪙 <b id="coins">0</b></span><button id="pause">Ⅱ</button></div>
+</div>
 
-<div id="interaction" class="interaction hidden"></div>
-<div id="toast" class="toast"></div>
+<div id="touch" class="hidden">
+  <div class="touchMove left"><button data-k="a">◀</button><button data-k="d">▶</button><button data-k="w">▲</button></div>
+  <div class="touchMove right"><button data-k="ArrowLeft">◀</button><button data-k="ArrowRight">▶</button><button data-k="ArrowUp">▲</button></div>
+  <div class="touchFight"><button data-a="attackL">⚔</button><button data-a="attackM">⚔</button><button data-a="jump">↟</button></div>
+</div>
 
-<section id="touchUI" class="hidden">
-  <div class="stick" id="moveStick"><span></span></div>
-  <div class="touchActions">
-    <button data-action="attack">⚔</button>
-    <button data-action="dash">✦</button>
-    <button data-action="interact">E</button>
-  </div>
-</section>
+<div id="toast"></div>
 
-<section id="pauseScreen" class="screen modal hidden">
-  <div class="panel">
-    <div class="brand">LORIS <i>×</i> MARISA</div>
+<div id="pauseBox" class="overlay hidden">
+  <div class="menuCard">
+    <div class="kicker">LUNARIA</div>
     <h2>PAUSA</h2>
-    <button id="resumeBtn" class="mainBtn">RIPRENDI</button>
-    <button id="saveBtn" class="ghostBtn">SALVA AVVENTURA</button>
-    <button id="homeBtn" class="ghostBtn">MENU PRINCIPALE</button>
+    <button id="resume" class="pixelBtn">RIPRENDI</button>
+    <button id="save" class="secondaryBtn">SALVA</button>
+    <button id="home" class="secondaryBtn">MENU</button>
   </div>
-</section>
+</div>
 
-<section id="dialogue" class="screen modal hidden">
-  <div class="dialogueBox">
-    <div id="dialogueWho"></div>
-    <h2 id="dialogueName"></h2>
-    <p id="dialogueText"></p>
-    <div id="choices"></div>
-    <button id="nextDialogue" class="mainBtn">CONTINUA</button>
+<div id="winBox" class="overlay hidden">
+  <div class="menuCard">
+    <div class="logoPixel">♥</div>
+    <div class="kicker">AVVENTURA COMPLETATA</div>
+    <h2>Loris ❤️ Marisa</h2>
+    <p>Il Cuore della Luna è salvo. La vostra storia può continuare...</p>
+    <button id="again" class="pixelBtn">GIOCA ANCORA</button>
   </div>
-</section>
-
-<section id="inventory" class="screen modal hidden">
-  <div class="panel wide">
-    <div class="brand">LORIS <i>×</i> MARISA</div>
-    <h2>ZAINO</h2>
-    <div id="inventoryGrid"></div>
-    <button id="closeInventory" class="mainBtn">CHIUDI</button>
-  </div>
-</section>
-
-<section id="victory" class="screen modal hidden">
-  <div class="panel victory">
-    <div class="brand">LUNARIA È SALVA</div>
-    <h1>Loris ❤️ Marisa</h1>
-    <p>Avete risvegliato il Cuore di Lunaria. Ma questa è solo l'inizio...</p>
-    <div class="statsEnd" id="endStats"></div>
-    <button id="endReplay" class="mainBtn">TORNA A LUNARIA</button>
-  </div>
-</section>
+</div>
 
 <script src="game.js"></script>
 </body>

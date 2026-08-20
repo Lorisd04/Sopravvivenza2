@@ -1,32 +1,29 @@
-# Loris & Marisa — Il Cuore di Lunaria
+# Loris & Marisa — Lunaria Pixel V2
 
-Avventura 2D top-down pensata come base per una futura app iOS/Android.
+Versione rifatta in stile pixel-art 2D side-scrolling, con una leggibilità molto maggiore rispetto alla prima demo.
 
-## Controlli desktop
-- Movimento: WASD
-- Attacco: Spazio
-- Scatto: Q
-- Interagisci: E
-- Zaino: I
+## Controlli
+PC:
+- Loris: A / D per muoversi, W per saltare, J per attaccare
+- Marisa: ← / → per muoversi, ↑ per saltare, K per attaccare
+- P: pausa
 
-## iPhone
-Comandi touch: joystick virtuale + attacco/scatto/interazione.
+iPhone:
+- due pad di movimento
+- pulsanti di attacco e salto
 
-## Contenuti della V1
-- Mappa 3600×2500 con 6 zone
-- Villaggio, foresta, costa, deserto, rovine e valle
-- NPC e dialoghi
-- Quest a progressione
-- 3 gemme, chiave, monete e pozione
-- Nemici e Guardiano della Luna
-- Combattimento, XP, livelli, stamina, dash
-- Minimap
-- Giorno/notte dinamico
-- Salvataggio locale
-- Responsive e installabile come PWA
+## Caratteristiche
+- mondo 2D a tile
+- terreno, colline, sotterranei e piattaforme
+- biomi cromaticamente diversi
+- personaggi pixel-art Loris e Marisa
+- nemici Slime e Wisp
+- boss/Guardiano
+- gemme, monete e progressione obiettivi
+- minimappa/HUD semplificati
+- giorno/notte
+- particelle e feedback di combattimento
+- salvataggio locale
+- PWA pronta per GitHub Pages
 
-## Pubblicazione
-Caricare tutti i file nella root di un repository GitHub e pubblicare con GitHub Pages usando "Static HTML".
-
-## Futuro App Store
-La base web può essere impacchettata con Capacitor. Per multiplayer online reale servirà un backend realtime; la V1 è volutamente locale/offline.
+Questa è una base per una versione ancora più ricca: case esplorabili, NPC, inventario, crafting, boss multipli, dungeon e una storia a capitoli.

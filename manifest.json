@@ -1,9 +1,10 @@
 {
-  "name": "Loris & Marisa — Il Cuore di Lunaria",
-  "short_name": "Lunaria",
+  "name": "Loris & Marisa — Lunaria Pixel",
+  "short_name": "Lunaria Pixel",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#080b19",
-  "theme_color": "#0b1024",
-  "orientation": "landscape"
+  "background_color": "#0e1430",
+  "theme_color": "#1a2447",
+  "orientation": "landscape",
+  "icons": []
 }
