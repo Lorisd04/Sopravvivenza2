@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 const canvas=document.getElementById("game");
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -9,6 +10,15 @@ renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
 scene.fog=new THREE.Fog(0x8fc7df,35,190);
 scene.background=new THREE.Color(0x8fc7df);
+const skyCanvas=document.createElement("canvas"); skyCanvas.width=32; skyCanvas.height=256;
+const skyCtx=skyCanvas.getContext("2d");
+const skyGrad=skyCtx.createLinearGradient(0,0,0,256);
+skyGrad.addColorStop(0,"#4f79bf"); skyGrad.addColorStop(.5,"#8fc7df"); skyGrad.addColorStop(1,"#d9efdc");
+skyCtx.fillStyle=skyGrad; skyCtx.fillRect(0,0,32,256);
+const skyTex=new THREE.CanvasTexture(skyCanvas);
+const skyMat=new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,depthWrite:false});
+const skyMesh=new THREE.Mesh(new THREE.SphereGeometry(240,32,16),skyMat); scene.add(skyMesh);
+
 
 const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,500);
 camera.position.set(0,2.2,8);
@@ -27,9 +37,45 @@ const playerRadius=.48;
 
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}addEventListener("resize",resize);resize();
 
-function mat(color,rough=.9){return new THREE.MeshStandardMaterial({color,roughness:rough})}
-const mats={grass:mat(0x4d8b57),grass2:mat(0x62a86a),trunk:mat(0x654331),rock:mat(0x737b88),stone:mat(0x4a5262),wood:mat(0x755239),roof:mat(0x6f4051),water:mat(0x287fa0,.45),leaf:mat(0x2e6f4a),leaf2:mat(0x3d8a59),crystal:mat(0x83ecff,.35),enemy:mat(0x8b6fff),enemy2:mat(0x6de09e),gold:mat(0xffd873),moon:mat(0xfff2b3),portal:mat(0xc07dff,.4)};
-
+function tex(base, accent, seed=1, scale=1){
+  const c=document.createElement("canvas"); c.width=128; c.height=128;
+  const g=c.getContext("2d");
+  g.fillStyle=base; g.fillRect(0,0,128,128);
+  let s=seed*99991;
+  const rnd=()=>{s=(s*1664525+1013904223)>>>0; return s/4294967296};
+  for(let i=0;i<240;i++){
+    const x=Math.floor(rnd()*128),y=Math.floor(rnd()*128),w=1+Math.floor(rnd()*5),h=1+Math.floor(rnd()*5);
+    g.fillStyle=accent; g.globalAlpha=.16+.28*rnd(); g.fillRect(x,y,w,h);
+  }
+  g.globalAlpha=1;
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.repeat.set(scale,scale);
+  t.magFilter=THREE.NearestFilter;
+  t.minFilter=THREE.NearestMipmapLinearFilter;
+  return t;
+}
+function mat(color,rough=.9,texture=null){
+  return new THREE.MeshStandardMaterial({color,roughness:rough,map:texture});
+}
+const mats={
+  grass:mat(0xffffff,.96,tex("#4f9656","#9bd467",1,18)),
+  grass2:mat(0xffffff,.96,tex("#66a965","#d2ef8e",2,14)),
+  trunk:mat(0xffffff,1,tex("#6a4631","#a06a45",3,5)),
+  rock:mat(0xffffff,1,tex("#747b88","#b4bcc8",4,3)),
+  stone:mat(0xffffff,.98,tex("#555f70","#8590a0",5,4)),
+  wood:mat(0xffffff,.95,tex("#76513a","#b27b55",6,4)),
+  roof:mat(0xffffff,.92,tex("#713f52","#b86a79",7,3)),
+  water:mat(0x4dbeef,.22,tex("#1f789b","#75d8f1",8,7)),
+  leaf:mat(0xffffff,.96,tex("#2f7149","#6bbf62",9,5)),
+  leaf2:mat(0xffffff,.96,tex("#438b55","#91d97c",10,5)),
+  crystal:mat(0x9cefff,.22,tex("#79e6ff","#e7ffff",11,2)),
+  enemy:mat(0x8b6fff,.7,tex("#7968cf","#b7a9ff",12,2)),
+  enemy2:mat(0x6de09e,.7,tex("#4aae70","#a1f1af",13,2)),
+  gold:mat(0xffd873,.5,tex("#e8ae43","#ffe38e",14,2)),
+  moon:mat(0xfff2b3,.35,tex("#f1d686","#fff8ce",15,2)),
+  portal:mat(0xc07dff,.3,tex("#8b5fd8","#e2c9ff",16,2))
+};
 function box(name,x,y,z,w,h,d,m,collide=true){const g=new THREE.BoxGeometry(w,h,d),o=new THREE.Mesh(g,m);o.name=name;o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);if(collide)colliders.push({x,z,w,d});return o}
 function addTree(x,z,s=1){box("trunk",x,1.9*s,z,.42*s,3.8*s,.42*s,mats.trunk,false);const a=new THREE.Group();for(let i=0;i<4;i++){const g=new THREE.IcosahedronGeometry(1.65*s,0),o=new THREE.Mesh(g,i%2?mats.leaf:mats.leaf2);o.position.set(x+(i%2?0.8:-.7)*s,4.2*s+(.3*i),z+(i%3-.9)*.6*s);o.scale.set(1.3,.9,1.3);o.castShadow=true;a.add(o)}scene.add(a)}
 function addHouse(x,z){box("house",x,2.1,z,7,4.2,6,mats.wood,true);const r=new THREE.Mesh(new THREE.ConeGeometry(5.2,2.7,4),mats.roof);r.position.set(x,5.2,z);r.rotation.y=Math.PI/4;r.castShadow=true;scene.add(r);box("door",x,1,z-3.05,1.2,2,.2,mats.stone,false)}
@@ -37,10 +83,10 @@ function addRock(x,z,s=1){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(
 function createWorld(){
   const ground=box("ground",0,-.5,0,world.size*2,1,world.size*2,mats.grass,false);
   // paths
-  box("path",0,.01,0,12,.05,world.size*2,mat(0x987b63),false);
-  box("path2",0,.015,0,world.size*2,.05,11,mat(0x987b63),false);
+  box("path",0,.01,0,12,.05,world.size*2,mat(0xffffff,.98,tex("#8b715d","#b99a7b",18,16)),false);
+  box("path2",0,.015,0,world.size*2,.05,11,mat(0xffffff,.98,tex("#8b715d","#b99a7b",18,16)),false);
   // water lake
-  const water=box("lake",-33,.03,-30,31,.06,25,mats.water,false);water.material.transparent=true;water.material.opacity=.78;
+  const water=box("lake",-33,.03,-30,31,.06,25,mats.water,false);water.material.transparent=true;water.material.opacity=.92; water.material.side=THREE.DoubleSide;
   // walls around distant play boundary
   const b=world.size-4;[[-b,0,2,world.size*2],[b,0,2,world.size*2],[0,-b,world.size*2,2],[0,b,world.size*2,2]].forEach(v=>box("boundary",v[0],1,v[1],v[2],4,v[3],mats.stone,true));
   // village

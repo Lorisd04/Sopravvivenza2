@@ -1,34 +1,21 @@
-# Loris & Marisa — Lunaria 3D V1
+# Loris & Marisa — Lunaria 3D Texture Fix
 
-Nuova versione completamente rifatta in **prima persona 3D**.
+Questa versione sostituisce i materiali piatti con **texture procedurali generate direttamente nel browser**.
+Non ci sono PNG/JPG esterni da caricare, quindi GitHub Pages non deve risolvere percorsi di asset.
 
-## Controlli PC
-- W A S D: movimento
-- Mouse: visuale
-- Spazio: salta
-- J: attacca
-- E: interagisci
-- P: pausa
-- SHIFT: corsa
+Controlli:
+- PC: WASD + mouse, Spazio, J, E, Shift
+- iPhone: joystick, trascinamento della visuale, attacco, salto, interazione
 
-## Controlli iPhone
-- joystick sinistro: movimento
-- trascina sul mondo 3D: guarda intorno
-- ⚔: attacco
-- ↑: salto
-- E: interazione
-
-## Gameplay
-- villaggio
+Gameplay:
+- villaggio e case
 - foresta
 - lago
 - rovine/tempio
 - 3 Cristalli Lunari
-- NPC con dialoghi
+- NPC
 - nemici
 - Guardiano
-- ciclo giorno/notte
+- giorno/notte
 - monete
 - salvataggio locale
-
-La libreria Three.js è caricata via importmap da un CDN pubblico; GitHub Pages deve quindi avere accesso alla rete per caricarla.
