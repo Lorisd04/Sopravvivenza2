@@ -1,0 +1,9 @@
+{
+  "name": "Loris & Marisa — Il Cuore di Lunaria",
+  "short_name": "Lunaria",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#080b19",
+  "theme_color": "#0b1024",
+  "orientation": "landscape"
+}
