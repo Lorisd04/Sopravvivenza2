@@ -580,16 +580,23 @@ function setupInput(){
   });
   addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
 
-  document.getElementById("newGame").addEventListener("click",newGame);
-  document.getElementById("continueGame").addEventListener("click",continueGame);
-  document.getElementById("newGame").addEventListener("pointerdown",e=>{e.preventDefault();newGame()},{passive:false});
-  document.getElementById("continueGame").addEventListener("pointerdown",e=>{e.preventDefault();continueGame()},{passive:false});
+  const newGameBtn = document.getElementById("newGame");
+  if(newGameBtn) {
+    newGameBtn.addEventListener("click",newGame);
+    newGameBtn.addEventListener("pointerdown",e=>{e.preventDefault();newGame()},{passive:false});
+  }
 
-  document.getElementById("pauseBtn").addEventListener("click",()=>{paused=true;document.getElementById("pause").classList.remove("hidden")});
-  document.getElementById("resumeBtn").addEventListener("click",()=>{paused=false;document.getElementById("pause").classList.add("hidden")});
-  document.getElementById("saveBtn").addEventListener("click",saveGame);
-  document.getElementById("menuBtn").addEventListener("click",()=>location.reload());
-  document.getElementById("endingBtn").addEventListener("click",()=>location.reload());
+  const continueGameBtn = document.getElementById("continueGame");
+  if(continueGameBtn) {
+    continueGameBtn.addEventListener("click",continueGame);
+    continueGameBtn.addEventListener("pointerdown",e=>{e.preventDefault();continueGame()},{passive:false});
+  }
+
+  document.getElementById("pauseBtn")?.addEventListener("click",()=>{paused=true;document.getElementById("pause").classList.remove("hidden")});
+  document.getElementById("resumeBtn")?.addEventListener("click",()=>{paused=false;document.getElementById("pause").classList.add("hidden")});
+  document.getElementById("saveBtn")?.addEventListener("click",saveGame);
+  document.getElementById("menuBtn")?.addEventListener("click",()=>location.reload());
+  document.getElementById("endingBtn")?.addEventListener("click",()=>location.reload());
 
   addEventListener("mousemove",e=>{
     if(!running||paused||innerWidth<801)return;
@@ -634,20 +641,30 @@ function setupInput(){
   });
 
   const joy=document.getElementById("joystick");
-  joy.addEventListener("pointerdown",e=>{e.preventDefault();joystickId=e.pointerId;joy.setPointerCapture(e.pointerId);updateJoy(e)},{passive:false});
-  joy.addEventListener("pointermove",e=>{if(e.pointerId===joystickId)updateJoy(e)},{passive:false});
-  joy.addEventListener("pointerup",releaseJoy);
-  joy.addEventListener("pointercancel",releaseJoy);
+  if(joy) {
+    joy.addEventListener("pointerdown",e=>{e.preventDefault();joystickId=e.pointerId;joy.setPointerCapture(e.pointerId);updateJoy(e)},{passive:false});
+    joy.addEventListener("pointermove",e=>{if(e.pointerId===joystickId)updateJoy(e)},{passive:false});
+    joy.addEventListener("pointerup",releaseJoy);
+    joy.addEventListener("pointercancel",releaseJoy);
+  }
 
   function updateJoy(e){
+    if(!joy) return;
     const r=joy.getBoundingClientRect();
     let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
     const max=45,l=Math.hypot(dx,dy);
     if(l>max){dx*=max/l;dy*=max/l;}
     keys.a=dx<-12;keys.d=dx>12;keys.w=dy<-12;keys.s=dy>12;
-    joy.querySelector("div").style.transform=`translate(${dx}px,${dy}px)`;
+    const knob = joy.querySelector(".joystick-knob") || joy.querySelector("div");
+    if(knob) knob.style.transform=`translate(${dx}px,${dy}px)`;
   }
-  function releaseJoy(){joystickId=null;keys.a=keys.d=keys.w=keys.s=false;joy.querySelector("div").style.transform="";}
+  function releaseJoy(){
+    joystickId=null;
+    keys.a=keys.d=keys.w=keys.s=false;
+    if(!joy) return;
+    const knob = joy.querySelector(".joystick-knob") || joy.querySelector("div");
+    if(knob) knob.style.transform="";
+  }
 }
 
 function renderWorld(){
